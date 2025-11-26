@@ -4,10 +4,12 @@ import { Text, View } from "react-native";
 import { styles } from "./websocket-status.styles";
 
 export function WebSocketStatus() {
-  const [status, setStatus] = useState<string>("Connecting...");
+  const [connectionStatus, setConnectionStatus] =
+    useState<string>("Connecting...");
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const [messageCount, setMessageCount] = useState(0);
   const [isRateLimited, setIsRateLimited] = useState(false);
+  const [lastUpdateTime, setLastUpdateTime] = useState<string>("N/A");
 
   useEffect(() => {
     finnhubWebSocket.connect();
@@ -16,20 +18,18 @@ export function WebSocketStatus() {
     finnhubWebSocket.subscribeToSymbols(testSymbols);
 
     const tradeSubscription = finnhubWebSocket.trades$.subscribe((trade) => {
-      setLastMessage(
-        `Symbol: ${trade.s}, Price: ${trade.p}, Time: ${new Date(
-          trade.t
-        ).toLocaleTimeString()}`
-      );
+      const now = new Date();
+      setLastMessage(`${trade.s}: $${trade.p.toFixed(2)}`);
+      setLastUpdateTime(now.toLocaleTimeString());
       setMessageCount((prev) => prev + 1);
-      setStatus("Connected");
+      setConnectionStatus("Connected");
       setIsRateLimited(false);
     });
 
     const stockSubscription = finnhubWebSocket.stockUpdates$.subscribe(
       (stock) => {
         if (stock.symbol === "SYSTEM" && stock.name === "Rate Limited") {
-          setStatus("Rate Limited");
+          setConnectionStatus("Rate Limited");
           setIsRateLimited(true);
         }
       }
@@ -41,36 +41,47 @@ export function WebSocketStatus() {
     };
   }, []);
 
+  const getStatusDot = () => {
+    if (isRateLimited) {
+      return <View style={styles.rateLimitedDot} />;
+    } else if (connectionStatus === "Connected") {
+      return <View style={styles.connectedDot} />;
+    } else {
+      return <View style={styles.disconnectedDot} />;
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>WebSocket Status</Text>
-      <Text style={styles.status}>
-        Status:{" "}
-        <Text
-          style={[
-            styles.highlight,
-            {
-              color: isRateLimited
-                ? "#F44336"
-                : status === "Connected"
-                ? "#4CAF50"
-                : "#0a7ea4",
-            },
-          ]}
-        >
-          {status}
-        </Text>
-      </Text>
-      <Text style={styles.status}>
-        Messages Received: <Text style={styles.highlight}>{messageCount}</Text>
-      </Text>
+      <Text style={styles.title}>WebSocket Connection</Text>
+
+      <View style={styles.statusRow}>
+        <Text style={styles.statusLabel}>Status:</Text>
+        <View style={styles.statusContainer}>
+          {getStatusDot()}
+          <Text style={styles.statusValue}>{connectionStatus}</Text>
+        </View>
+      </View>
+
+      <View style={styles.statusRow}>
+        <Text style={styles.statusLabel}>Messages Received:</Text>
+        <Text style={styles.statusValue}>{messageCount}</Text>
+      </View>
+
+      <View style={styles.statusRow}>
+        <Text style={styles.statusLabel}>Last Update:</Text>
+        <Text style={styles.statusValue}>{lastUpdateTime}</Text>
+      </View>
+
       {lastMessage && !isRateLimited && (
-        <Text style={styles.message}>
-          Last Message: <Text style={styles.highlight}>{lastMessage}</Text>
-        </Text>
+        <View style={styles.statusRow}>
+          <Text style={styles.statusLabel}>Last Trade:</Text>
+          <Text style={styles.statusValue}>{lastMessage}</Text>
+        </View>
       )}
+
       {isRateLimited && (
-        <Text style={[styles.message, { color: "#F44336" }]}>
+        <Text style={styles.message}>
           The Finnhub API is rate limiting our requests. This is normal with the
           free tier API key. Real-time updates are temporarily unavailable.
         </Text>
