@@ -52,4 +52,23 @@ export const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "rgba(0, 0, 0, 0.05)",
   },
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  modeSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(10, 126, 164, 0.1)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  modeSelectorText: {
+    marginRight: 8,
+    fontSize: 14,
+    fontWeight: "500",
+  },
 });

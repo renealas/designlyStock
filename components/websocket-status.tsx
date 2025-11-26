@@ -14,7 +14,18 @@ export function WebSocketStatus() {
   useEffect(() => {
     finnhubWebSocket.connect();
 
-    const testSymbols = ["AAPL", "MSFT"];
+    const testSymbols = [
+      "AAPL",
+      "MSFT",
+      "AMZN",
+      "GOOGL",
+      "META",
+      "TSLA",
+      "NVDA",
+      "AMD",
+      "INTC",
+      "SPY",
+    ];
     finnhubWebSocket.subscribeToSymbols(testSymbols);
 
     const tradeSubscription = finnhubWebSocket.trades$.subscribe((trade) => {

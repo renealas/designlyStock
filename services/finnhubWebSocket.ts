@@ -134,6 +134,7 @@ class FinnhubWebSocketService {
       this.stockCache.set(symbol, updatedStock);
       this.stockUpdateSubject.next(updatedStock);
     } else {
+      // Create a new stock entry if it doesn't exist in the cache
       const newStock: WatchlistItem = {
         symbol,
         name: symbol,
@@ -143,6 +144,11 @@ class FinnhubWebSocketService {
       };
 
       this.stockCache.set(symbol, newStock);
+      // Also emit the new stock to subscribers
+      this.stockUpdateSubject.next(newStock);
+      console.log(
+        `Added new stock to cache: ${symbol} at $${trade.p.toFixed(2)}`
+      );
     }
   }
 
@@ -167,10 +173,21 @@ class FinnhubWebSocketService {
       const message = JSON.parse(event.data) as TradeData;
 
       if (message.type === "trade") {
+        // Log the first trade for debugging
+        if (message.data.length > 0) {
+          console.log(
+            `Received trade data for ${
+              message.data[0].s
+            }: $${message.data[0].p.toFixed(2)}`
+          );
+        }
+
         message.data.forEach((trade) => {
           this.tradeSubject.next(trade);
           this.updateStockCache(trade);
         });
+      } else {
+        console.log("Received non-trade message:", message.type);
       }
     } catch (error) {
       console.error("Error parsing WebSocket message:", error);

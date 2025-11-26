@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 interface UseFinnhubWebSocketOptions {
   symbols: string[];
   initialData?: WatchlistItem[];
+  enabled?: boolean;
 }
 
 export function useFinnhubWebSocket({
   symbols,
   initialData = [],
+  enabled = true,
 }: UseFinnhubWebSocketOptions) {
   const [stockData, setStockData] = useState<Map<string, WatchlistItem>>(
     new Map(initialData.map((item) => [item.symbol, item]))
@@ -18,6 +20,14 @@ export function useFinnhubWebSocket({
   const [isRateLimited, setIsRateLimited] = useState(false);
 
   useEffect(() => {
+    if (!enabled) {
+      if (isConnected) {
+        finnhubWebSocket.disconnect();
+        setIsConnected(false);
+      }
+      return;
+    }
+
     if (initialData.length > 0) {
       finnhubWebSocket.initializeStockCache(initialData);
     }
@@ -25,7 +35,23 @@ export function useFinnhubWebSocket({
     finnhubWebSocket.connect();
     setIsConnected(true);
 
-    finnhubWebSocket.subscribeToSymbols(symbols);
+    const extendedSymbols = [
+      ...symbols,
+      "TSLA",
+      "NVDA",
+      "AMD",
+      "INTC",
+      "SPY",
+      "AMZN",
+      "GOOGL",
+      "META",
+      "JPM",
+      "BAC",
+    ];
+
+    // Filter out duplicates
+    const uniqueSymbols = [...new Set(extendedSymbols)];
+    finnhubWebSocket.subscribeToSymbols(uniqueSymbols);
 
     const subscription = finnhubWebSocket.stockUpdates$.subscribe(
       (updatedStock) => {
@@ -56,13 +82,13 @@ export function useFinnhubWebSocket({
         setIsConnected(false);
       }
     };
-  }, [symbols.join(",")]);
+  }, [symbols.join(","), enabled]);
 
   const stocksArray = Array.from(stockData.values());
 
   return {
     stocks: stocksArray,
-    isConnected,
-    isRateLimited,
+    isConnected: enabled && isConnected,
+    isRateLimited: enabled && isRateLimited,
   };
 }
