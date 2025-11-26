@@ -1,0 +1,153 @@
+import { StockCard } from "@/components/stock-card";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { WebSocketStatus } from "@/components/websocket-status";
+import { useFinnhubWebSocket } from "@/hooks/use-finnhub-websocket";
+import {
+  defaultWatchlistSymbols,
+  fetchWatchlistData,
+} from "@/services/finnhubApi";
+import { WatchlistItem } from "@/types/finnhub";
+import { Image } from "expo-image";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  View,
+} from "react-native";
+import { styles } from "./watchlist.styles";
+
+export default function WatchlistScreen() {
+  const [initialData, setInitialData] = useState<WatchlistItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Load initial data from REST API
+  async function loadInitialData() {
+    try {
+      setIsLoading(true);
+      const data = await fetchWatchlistData(defaultWatchlistSymbols);
+      setInitialData(data);
+    } catch (error) {
+      console.error("Error loading watchlist data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const {
+    stocks: watchlistItems,
+    isConnected,
+    isRateLimited,
+  } = useFinnhubWebSocket({
+    symbols: defaultWatchlistSymbols,
+    initialData,
+  });
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await loadInitialData();
+    setRefreshing(false);
+  }
+
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const renderStockCard = ({ item }: { item: WatchlistItem }) => (
+    <StockCard
+      stock={item}
+      onPress={() => console.log(`Pressed ${item.symbol}`)}
+    />
+  );
+
+  return (
+    <ThemedView style={styles.mainContainer}>
+      <View style={styles.header}>
+        <Image
+          source={require("@/assets/images/partial-react-logo.png")}
+          style={styles.headerImage}
+        />
+      </View>
+
+      <ThemedView style={styles.container}>
+        <ThemedText type="title" style={styles.title}>
+          Watchlist
+        </ThemedText>
+
+        <WebSocketStatus />
+
+        {isLoading && watchlistItems.length === 0 ? (
+          <ThemedView style={styles.loadingContainer}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <ActivityIndicator
+                size="small"
+                color="#0a7ea4"
+                style={{ marginRight: 10 }}
+              />
+              <ThemedText>Loading stocks...</ThemedText>
+            </View>
+          </ThemedView>
+        ) : (
+          <>
+            {isConnected && !isRateLimited && (
+              <ThemedView style={styles.connectionStatus}>
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: "#4CAF50",
+                    marginRight: 6,
+                  }}
+                />
+                <ThemedText style={{ fontSize: 12 }}>Live</ThemedText>
+              </ThemedView>
+            )}
+            {isRateLimited && (
+              <ThemedView
+                style={[
+                  styles.connectionStatus,
+                  { backgroundColor: "rgba(244, 67, 54, 0.1)" },
+                ]}
+              >
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: "#F44336",
+                    marginRight: 6,
+                  }}
+                />
+                <ThemedText style={{ fontSize: 12, color: "#F44336" }}>
+                  Rate Limited
+                </ThemedText>
+              </ThemedView>
+            )}
+            <FlatList
+              data={watchlistItems}
+              renderItem={renderStockCard}
+              keyExtractor={(item) => item.symbol}
+              style={styles.list}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                />
+              }
+              ListEmptyComponent={
+                <ThemedView style={styles.emptyContainer}>
+                  <ThemedText>No stocks in watchlist</ThemedText>
+                </ThemedView>
+              }
+            />
+          </>
+        )}
+      </ThemedView>
+    </ThemedView>
+  );
+}
