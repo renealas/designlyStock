@@ -134,8 +134,9 @@ export default function AlertScreen() {
     <ThemedView style={styles.mainContainer}>
       <View style={styles.header}>
         <Image
-          source={require("@/assets/images/partial-react-logo.png")}
+          source={require("../../assets/logo/designly.png")}
           style={styles.headerImage}
+          contentFit="contain"
         />
       </View>
 
