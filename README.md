@@ -6,25 +6,30 @@ DesignlyStock is a comprehensive mobile application built with React Native and 
 
 ## Table of Contents
 
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Technologies Used](#technologies-used)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Running the App](#running-the-app)
-- [Authentication](#authentication)
-- [Screens and Functionality](#screens-and-functionality)
-  - [Watchlist Screen](#watchlist-screen)
-  - [Alert Screen](#alert-screen)
-  - [Graph Screen](#graph-screen)
-- [API Integration](#api-integration)
-- [WebSocket Implementation](#websocket-implementation)
-- [Notifications](#notifications)
-- [Styling and Theming](#styling-and-theming)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
+- [DesignlyStock - Stock Market Tracking App](#designlystock---stock-market-tracking-app)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Project Structure](#project-structure)
+  - [Technologies Used](#technologies-used)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Running the App](#running-the-app)
+  - [Authentication](#authentication)
+  - [Screens and Functionality](#screens-and-functionality)
+    - [Watchlist Screen](#watchlist-screen)
+    - [Alert Screen](#alert-screen)
+    - [Graph Screen](#graph-screen)
+  - [API Integration](#api-integration)
+  - [WebSocket Implementation](#websocket-implementation)
+  - [Notifications](#notifications)
+  - [Styling and Theming](#styling-and-theming)
+  - [Troubleshooting](#troubleshooting)
+    - [Common Issues](#common-issues)
+  - [⚠️ API Limitations Warning](#️-api-limitations-warning)
+    - [Finnhub API Limitations](#finnhub-api-limitations)
+    - [Auth0 Limitations](#auth0-limitations)
+  - [License](#license)
 
 ## Features
 
@@ -213,15 +218,23 @@ The app uses a consistent styling approach with:
    - The Finnhub API has rate limits for free accounts
    - The app will automatically switch to mock data when rate-limited
 
-## Contributing
+## ⚠️ API Limitations Warning
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+This application uses free tier API services which come with significant limitations:
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Finnhub API Limitations
+
+- The WebSocket connection can only handle a small amount of requests before reaching the rate limit
+- When rate limited, the app will automatically switch to mock data generation
+- The free tier limits the number of API calls per minute and per day
+- Some stock data may be delayed or limited compared to paid tiers
+
+### Auth0 Limitations
+
+- The Auth0 integration is set to use the current load IP of the project for callbacks
+- This requires changing the callback URL in the Auth0 dashboard whenever your development IP changes
+- For development purposes, you may need to update the Auth0 configuration frequently
+- In production, a fixed domain would be used instead
 
 ## License
 
