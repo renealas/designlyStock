@@ -41,11 +41,18 @@ export const styles = StyleSheet.create({
     color: "#ffffff",
   },
   connectedDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: "#4CAF50",
-    marginRight: 6,
+    marginRight: 5,
+  },
+  connectingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#FFC107",
+    marginRight: 5,
   },
   rateLimitedDot: {
     width: 8,

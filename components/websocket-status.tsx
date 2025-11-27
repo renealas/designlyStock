@@ -45,6 +45,14 @@ export function WebSocketStatus() {
             setConnectionStatus("Connected");
             setIsRateLimited(false);
             setIsError(false);
+          } else if (stock.name === "Connecting") {
+            setConnectionStatus("Connecting...");
+            setIsRateLimited(false);
+            setIsError(false);
+          } else if (stock.name === "Reconnecting") {
+            setConnectionStatus("Reconnecting...");
+            setIsRateLimited(false);
+            setIsError(false);
           }
         }
       }
@@ -63,6 +71,11 @@ export function WebSocketStatus() {
       return <View style={styles.errorDot} />;
     } else if (connectionStatus === "Connected") {
       return <View style={styles.connectedDot} />;
+    } else if (
+      connectionStatus === "Connecting" ||
+      connectionStatus === "Reconnecting"
+    ) {
+      return <View style={styles.connectingDot} />;
     } else {
       return <View style={styles.disconnectedDot} />;
     }

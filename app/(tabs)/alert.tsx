@@ -1,3 +1,4 @@
+import { TestAlertButton } from "@/components/test-alert-button";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -222,6 +223,8 @@ export default function AlertScreen() {
               <ThemedText type="subtitle" style={styles.alertsTitle}>
                 Your Price Alerts
               </ThemedText>
+
+              <TestAlertButton />
 
               {alerts.length === 0 ? (
                 <ThemedView style={styles.emptyAlerts}>

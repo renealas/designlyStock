@@ -1,5 +1,6 @@
 import { WatchlistItem } from "@/types/finnhub";
 import { Subject } from "rxjs";
+import { notificationService } from "./notificationService";
 
 const API_KEY = "d4jljmhr01qgcb0u1ldgd4jljmhr01qgcb0u1le0";
 const WS_URL = `wss://ws.finnhub.io?token=${API_KEY}`;
@@ -43,6 +44,18 @@ class FinnhubWebSocketService {
         this.socket.readyState === WebSocket.CONNECTING)
     ) {
       console.log("WebSocket is already connected or connecting");
+
+      // Notify subscribers that we're connected
+      if (this.socket.readyState === WebSocket.OPEN) {
+        this.stockUpdateSubject.next({
+          symbol: "SYSTEM",
+          name: "Connected",
+          price: 0,
+          change: 0,
+          percentChange: 0,
+        });
+      }
+
       return;
     }
 
@@ -55,6 +68,15 @@ class FinnhubWebSocketService {
       this.socket.onclose = this.handleClose.bind(this);
 
       console.log("Connecting to Finnhub WebSocket...");
+
+      // Notify subscribers that we're connecting
+      this.stockUpdateSubject.next({
+        symbol: "SYSTEM",
+        name: "Connecting",
+        price: 0,
+        change: 0,
+        percentChange: 0,
+      });
     } catch (error) {
       console.error("Failed to connect to Finnhub WebSocket:", error);
       this.attemptReconnect();
@@ -137,6 +159,9 @@ class FinnhubWebSocketService {
 
       this.stockCache.set(symbol, updatedStock);
       this.stockUpdateSubject.next(updatedStock);
+
+      // Check for price alerts
+      notificationService.checkPriceAlerts(updatedStock);
     } else {
       const newStock: WatchlistItem = {
         symbol,
@@ -148,6 +173,10 @@ class FinnhubWebSocketService {
 
       this.stockCache.set(symbol, newStock);
       this.stockUpdateSubject.next(newStock);
+
+      // Check for price alerts
+      notificationService.checkPriceAlerts(newStock);
+
       console.log(
         `Added new stock to cache: ${symbol} at $${trade.p.toFixed(2)}`
       );
@@ -215,6 +244,11 @@ class FinnhubWebSocketService {
       change: 0,
       percentChange: 0,
     });
+
+    // Close the socket to trigger reconnect
+    if (this.socket) {
+      this.socket.close();
+    }
   }
 
   private handleClose(event: CloseEvent): void {
@@ -313,6 +347,15 @@ class FinnhubWebSocketService {
   private attemptReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.log("Max reconnect attempts reached");
+
+      // Start mock data if we've reached max reconnect attempts
+      if (USE_MOCK_DATA) {
+        console.log(
+          "Starting mock data generation after max reconnect attempts"
+        );
+        this.startMockDataInterval();
+      }
+
       return;
     }
 
@@ -323,10 +366,21 @@ class FinnhubWebSocketService {
       `Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
     );
 
+    // Notify subscribers that we're attempting to reconnect
+    this.stockUpdateSubject.next({
+      symbol: "SYSTEM",
+      name: "Reconnecting",
+      price: 0,
+      change: 0,
+      percentChange: 0,
+    });
+
     setTimeout(() => {
       this.connect();
     }, delay);
   }
 }
 
+// Export the singleton instance
 export const finnhubWebSocket = new FinnhubWebSocketService();
+export { FinnhubWebSocketService };
