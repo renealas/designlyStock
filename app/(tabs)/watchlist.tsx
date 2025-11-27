@@ -1,7 +1,9 @@
 import { StockCard } from "@/components/stock-card";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { WebSocketStatus } from "@/components/websocket-status";
+import { useAuth } from "@/contexts/AuthContext";
 import { useFinnhubWebSocket } from "@/hooks/use-finnhub-websocket";
 import {
   defaultWatchlistSymbols,
@@ -15,6 +17,7 @@ import {
   FlatList,
   RefreshControl,
   Switch,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { styles } from "./watchlist.styles";
@@ -25,6 +28,15 @@ export default function WatchlistScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [staticData, setStaticData] = useState<WatchlistItem[]>([]);
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   const extendedWatchlistSymbols = [
     ...defaultWatchlistSymbols,
@@ -97,6 +109,13 @@ export default function WatchlistScreen() {
           style={styles.headerImage}
           contentFit="contain"
         />
+        <TouchableOpacity onPress={handleLogout} style={{ marginRight: 15 }}>
+          <IconSymbol
+            size={30}
+            name="rectangle.portrait.and.arrow.right"
+            color="#ffffff"
+          />
+        </TouchableOpacity>
       </View>
 
       <ThemedView style={styles.container}>

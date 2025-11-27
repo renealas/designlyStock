@@ -1,5 +1,7 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   defaultWatchlistSymbols,
   fetchWatchlistData,
@@ -12,6 +14,7 @@ import {
   Dimensions,
   RefreshControl,
   ScrollView,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
@@ -21,6 +24,15 @@ export default function GraphScreen() {
   const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   async function loadWatchlistData() {
     try {
@@ -82,6 +94,13 @@ export default function GraphScreen() {
           style={styles.headerImage}
           contentFit="contain"
         />
+        <TouchableOpacity onPress={handleLogout} style={{ marginRight: 15 }}>
+          <IconSymbol
+            size={30}
+            name="rectangle.portrait.and.arrow.right"
+            color="#ffffff"
+          />
+        </TouchableOpacity>
       </View>
 
       <ScrollView

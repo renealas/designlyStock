@@ -21,7 +21,7 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerTitle: "" }}>
+      <Stack screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
           <>
             <Stack.Screen

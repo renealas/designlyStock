@@ -2,6 +2,7 @@ import { TestAlertButton } from "@/components/test-alert-button";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   defaultWatchlistSymbols,
   fetchWatchlistData,
@@ -35,6 +36,15 @@ export default function AlertScreen() {
   const [priceAlert, setPriceAlert] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   async function loadWatchlistData() {
     try {
@@ -139,6 +149,13 @@ export default function AlertScreen() {
           style={styles.headerImage}
           contentFit="contain"
         />
+        <TouchableOpacity onPress={handleLogout} style={{ marginRight: 15 }}>
+          <IconSymbol
+            size={30}
+            name="rectangle.portrait.and.arrow.right"
+            color="#ffffff"
+          />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
