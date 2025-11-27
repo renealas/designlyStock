@@ -134,7 +134,6 @@ class FinnhubWebSocketService {
       this.stockCache.set(symbol, updatedStock);
       this.stockUpdateSubject.next(updatedStock);
     } else {
-      // Create a new stock entry if it doesn't exist in the cache
       const newStock: WatchlistItem = {
         symbol,
         name: symbol,
@@ -144,7 +143,6 @@ class FinnhubWebSocketService {
       };
 
       this.stockCache.set(symbol, newStock);
-      // Also emit the new stock to subscribers
       this.stockUpdateSubject.next(newStock);
       console.log(
         `Added new stock to cache: ${symbol} at $${trade.p.toFixed(2)}`
@@ -173,7 +171,6 @@ class FinnhubWebSocketService {
       const message = JSON.parse(event.data) as TradeData;
 
       if (message.type === "trade") {
-        // Log the first trade for debugging
         if (message.data.length > 0) {
           console.log(
             `Received trade data for ${
@@ -202,12 +199,10 @@ class FinnhubWebSocketService {
     console.log(`WebSocket closed: ${event.code} ${event.reason}`);
     this.socket = null;
 
-    // Don't attempt to reconnect if we're getting rate limited (429)
     if (event.code !== 1000 && !event.reason.includes("429")) {
       this.attemptReconnect();
     } else if (event.reason.includes("429")) {
       console.log("Rate limited by Finnhub API. Not attempting to reconnect.");
-      // Emit a special message to subscribers
       this.stockUpdateSubject.next({
         symbol: "SYSTEM",
         name: "Rate Limited",

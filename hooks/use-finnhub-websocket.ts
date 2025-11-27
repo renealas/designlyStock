@@ -49,7 +49,6 @@ export function useFinnhubWebSocket({
       "BAC",
     ];
 
-    // Filter out duplicates
     const uniqueSymbols = [...new Set(extendedSymbols)];
     finnhubWebSocket.subscribeToSymbols(uniqueSymbols);
 
