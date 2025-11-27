@@ -197,11 +197,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setIsLoading(true);
       setAuthError(null);
 
-      // Add a back handler to catch hardware back button presses during auth
       const backHandler = BackHandler.addEventListener(
         "hardwareBackPress",
         () => {
-          // Reset auth state and navigate to login on back press
           setIsLoading(false);
           setAuthError("Authentication was canceled");
           setTimeout(() => {
@@ -211,13 +209,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         }
       );
 
-      // Start the auth flow
       const result = await promptAsync();
 
-      // Remove the back handler once auth flow completes
       backHandler.remove();
 
-      // If the result is not success (e.g., user canceled), handle it here
       if (result.type !== "success") {
         setIsLoading(false);
         setAuthError("Authentication was canceled");
@@ -235,7 +230,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       );
       setIsLoading(false);
 
-      // Ensure we navigate back to login on error
       setTimeout(() => {
         router.replace("/login");
       }, 50);
@@ -246,31 +240,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     try {
       setIsLoading(true);
 
-      // Clear secure storage
       await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
       await SecureStore.deleteItemAsync(USER_KEY);
 
-      // Reset auth state
       setAccessToken(null);
       setUser(null);
       setIsAuthenticated(false);
 
-      // Set loading to false before navigation
       setIsLoading(false);
 
-      // Use setTimeout to ensure state updates are processed before navigation
       setTimeout(() => {
         router.replace("/login");
       }, 50);
     } catch (error) {
       console.error("Logout error:", error);
-      // Reset auth state
       setAccessToken(null);
       setUser(null);
       setIsAuthenticated(false);
       setIsLoading(false);
 
-      // Use setTimeout to ensure state updates are processed before navigation
       setTimeout(() => {
         router.replace("/login");
       }, 50);

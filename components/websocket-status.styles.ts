@@ -61,6 +61,13 @@ export const styles = StyleSheet.create({
     backgroundColor: "#FFC107",
     marginRight: 6,
   },
+  errorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#F44336",
+    marginRight: 6,
+  },
   statusContainer: {
     flexDirection: "row",
     alignItems: "center",

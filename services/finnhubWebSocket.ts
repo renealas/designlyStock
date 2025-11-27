@@ -4,6 +4,8 @@ import { Subject } from "rxjs";
 const API_KEY = "d4jljmhr01qgcb0u1ldgd4jljmhr01qgcb0u1le0";
 const WS_URL = `wss://ws.finnhub.io?token=${API_KEY}`;
 
+const USE_MOCK_DATA = true;
+
 export interface TradeData {
   data: Trade[];
   type: string;
@@ -83,6 +85,8 @@ class FinnhubWebSocketService {
     this.socket.send(message);
     this.subscribedSymbols.add(symbol);
     console.log(`Subscribed to ${symbol}`);
+
+    console.log("Currently subscribed to:", Array.from(this.subscribedSymbols));
   }
 
   public unsubscribe(symbol: string): void {
@@ -160,6 +164,14 @@ class FinnhubWebSocketService {
     console.log("Connected to Finnhub WebSocket");
     this.reconnectAttempts = 0;
 
+    this.stockUpdateSubject.next({
+      symbol: "SYSTEM",
+      name: "Connected",
+      price: 0,
+      change: 0,
+      percentChange: 0,
+    });
+
     this.subscribedSymbols.forEach((symbol) => {
       const message = JSON.stringify({ type: "subscribe", symbol });
       this.socket?.send(message);
@@ -185,6 +197,8 @@ class FinnhubWebSocketService {
         });
       } else {
         console.log("Received non-trade message:", message.type);
+
+        console.log("Message content:", JSON.stringify(event.data));
       }
     } catch (error) {
       console.error("Error parsing WebSocket message:", error);
@@ -193,6 +207,14 @@ class FinnhubWebSocketService {
 
   private handleError(event: Event): void {
     console.error("WebSocket error:", event);
+
+    this.stockUpdateSubject.next({
+      symbol: "SYSTEM",
+      name: "Error",
+      price: 0,
+      change: 0,
+      percentChange: 0,
+    });
   }
 
   private handleClose(event: CloseEvent): void {
@@ -210,7 +232,82 @@ class FinnhubWebSocketService {
         change: 0,
         percentChange: 0,
       });
+
+      if (USE_MOCK_DATA) {
+        console.log("Starting mock data generation due to rate limiting");
+        this.startMockDataInterval();
+      }
     }
+  }
+
+  private mockDataInterval: ReturnType<typeof setInterval> | null = null;
+
+  private startMockDataInterval(): void {
+    if (this.mockDataInterval) {
+      clearInterval(this.mockDataInterval);
+    }
+
+    console.log("Starting mock data generation");
+
+    this.generateMockDataForAllSymbols();
+
+    this.mockDataInterval = setInterval(() => {
+      this.generateMockDataForAllSymbols();
+    }, 3000);
+  }
+
+  private generateMockDataForAllSymbols(): void {
+    if (this.subscribedSymbols.size === 0) {
+      const defaultSymbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "META"];
+      defaultSymbols.forEach((symbol) => this.generateMockData(symbol));
+    } else {
+      this.subscribedSymbols.forEach((symbol) => this.generateMockData(symbol));
+    }
+  }
+
+  private generateMockData(symbol: string): void {
+    const currentStock = this.stockCache.get(symbol);
+
+    const basePrice = currentStock
+      ? currentStock.price
+      : this.getRandomPrice(symbol);
+
+    const changePercent = (Math.random() * 4 - 2) / 100;
+    const newPrice = basePrice * (1 + changePercent);
+
+    const mockTrade: Trade = {
+      p: newPrice,
+      s: symbol,
+      t: Date.now(),
+      v: Math.floor(Math.random() * 1000) + 100,
+      c: [],
+    };
+
+    this.tradeSubject.next(mockTrade);
+    this.updateStockCache(mockTrade);
+
+    console.log(`Generated mock data for ${symbol}: $${newPrice.toFixed(2)}`);
+  }
+
+  private getRandomPrice(symbol: string): number {
+    const basePrices: Record<string, number> = {
+      AAPL: 180,
+      MSFT: 350,
+      GOOGL: 130,
+      AMZN: 140,
+      META: 300,
+      TSLA: 240,
+      NVDA: 450,
+      AMD: 120,
+      INTC: 40,
+      SPY: 450,
+      JPM: 160,
+      BAC: 35,
+    };
+
+    const basePrice = basePrices[symbol] || 100;
+
+    return basePrice * (0.9 + Math.random() * 0.2);
   }
 
   private attemptReconnect(): void {

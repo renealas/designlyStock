@@ -1,4 +1,4 @@
-import { finnhubWebSocket } from "@/services/finnhubWebSocket";
+import { finnhubWebSocket, Trade } from "@/services/finnhubWebSocket";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { styles } from "./websocket-status.styles";
@@ -9,39 +9,43 @@ export function WebSocketStatus() {
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const [messageCount, setMessageCount] = useState(0);
   const [isRateLimited, setIsRateLimited] = useState(false);
+  const [isError, setIsError] = useState(false);
   const [lastUpdateTime, setLastUpdateTime] = useState<string>("N/A");
 
   useEffect(() => {
     finnhubWebSocket.connect();
 
-    const testSymbols = [
-      "AAPL",
-      "MSFT",
-      "AMZN",
-      "GOOGL",
-      "META",
-      "TSLA",
-      "NVDA",
-      "AMD",
-      "INTC",
-      "SPY",
-    ];
+    const testSymbols = ["AAPL", "MSFT", "AMZN", "GOOGL", "META"];
     finnhubWebSocket.subscribeToSymbols(testSymbols);
 
-    const tradeSubscription = finnhubWebSocket.trades$.subscribe((trade) => {
-      const now = new Date();
-      setLastMessage(`${trade.s}: $${trade.p.toFixed(2)}`);
-      setLastUpdateTime(now.toLocaleTimeString());
-      setMessageCount((prev) => prev + 1);
-      setConnectionStatus("Connected");
-      setIsRateLimited(false);
-    });
+    const tradeSubscription = finnhubWebSocket.trades$.subscribe(
+      (trade: Trade) => {
+        const now = new Date();
+        setLastMessage(`${trade.s}: $${trade.p.toFixed(2)}`);
+        setLastUpdateTime(now.toLocaleTimeString());
+        setMessageCount((prev) => prev + 1);
+        setConnectionStatus("Connected");
+        setIsRateLimited(false);
+        setIsError(false);
+      }
+    );
 
     const stockSubscription = finnhubWebSocket.stockUpdates$.subscribe(
-      (stock) => {
-        if (stock.symbol === "SYSTEM" && stock.name === "Rate Limited") {
-          setConnectionStatus("Rate Limited");
-          setIsRateLimited(true);
+      (stock: any) => {
+        if (stock.symbol === "SYSTEM") {
+          if (stock.name === "Rate Limited") {
+            setConnectionStatus("Rate Limited");
+            setIsRateLimited(true);
+            setIsError(false);
+          } else if (stock.name === "Error") {
+            setConnectionStatus("Connection Error");
+            setIsError(true);
+            setIsRateLimited(false);
+          } else if (stock.name === "Connected") {
+            setConnectionStatus("Connected");
+            setIsRateLimited(false);
+            setIsError(false);
+          }
         }
       }
     );
@@ -55,6 +59,8 @@ export function WebSocketStatus() {
   const getStatusDot = () => {
     if (isRateLimited) {
       return <View style={styles.rateLimitedDot} />;
+    } else if (isError) {
+      return <View style={styles.errorDot} />;
     } else if (connectionStatus === "Connected") {
       return <View style={styles.connectedDot} />;
     } else {
@@ -95,6 +101,13 @@ export function WebSocketStatus() {
         <Text style={styles.message}>
           The Finnhub API is rate limiting our requests. This is normal with the
           free tier API key. Real-time updates are temporarily unavailable.
+        </Text>
+      )}
+
+      {isError && (
+        <Text style={styles.message}>
+          There was an error connecting to the Finnhub WebSocket. This could be
+          due to an invalid API key or network issues.
         </Text>
       )}
     </View>

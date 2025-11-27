@@ -59,6 +59,7 @@ export default function WatchlistScreen() {
     stocks: liveWatchlistItems,
     isConnected,
     isRateLimited,
+    isError,
   } = useFinnhubWebSocket({
     symbols: uniqueSymbols,
     initialData,
@@ -164,6 +165,27 @@ export default function WatchlistScreen() {
                 />
                 <ThemedText style={{ fontSize: 12, color: "#F44336" }}>
                   Rate Limited
+                </ThemedText>
+              </ThemedView>
+            )}
+            {isLiveMode && isError && (
+              <ThemedView
+                style={[
+                  styles.connectionStatus,
+                  { backgroundColor: "rgba(244, 67, 54, 0.1)" },
+                ]}
+              >
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: "#F44336",
+                    marginRight: 6,
+                  }}
+                />
+                <ThemedText style={{ fontSize: 12, color: "#F44336" }}>
+                  Connection Error
                 </ThemedText>
               </ThemedView>
             )}
